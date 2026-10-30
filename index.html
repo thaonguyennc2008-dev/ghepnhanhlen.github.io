@@ -469,60 +469,6 @@
     </div>
 
     <!-- Script File Linking -->
-    <script src="script.js">// Đợi giao diện tải xong
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("Hệ thống điều khiển Ghép Từ đã kích hoạt!");
-
-    // 1. Quản lý ẩn/hiện các phân đoạn màn hình (Mô phỏng chuyển trang)
-    const sections = {
-        home: document.querySelector("h1").closest("body > div") || document.body, // Tìm phân đoạn chứa trang chủ
-        room: document.querySelector("h2[id*='word50'], h2:contains('WORD50')")?.closest("div"),
-        editor: document.querySelector("h2:contains('Tạo & Nhập Câu Hỏi')")?.closest("div")
-    };
-
-    // Hàm chuyển đổi màn hình nhanh
-    function showSection(target) {
-        // Nếu cấu trúc HTML của bạn gom các phần vào các thẻ div lớn, đoạn này sẽ giúp ẩn/hiện chúng
-        alert("Bạn vừa kích hoạt một tính năng! Hệ thống đang chuyển hướng giao diện.");
-    }
-
-    // 2. Kích hoạt tính năng Đổi kiểu tóc, Màu sắc nhân vật
-    const hairButtons = document.querySelectorAll("button, span");
-    hairButtons.forEach(btn => {
-        if(btn.textContent.includes("Ngắn") || btn.textContent.includes("Dài") || btn.textContent.includes("Trọc")) {
-            btn.style.cursor = "pointer";
-            btn.addEventListener("click", () => {
-                alert(`Đã đổi kiểu tóc thành: ${btn.textContent.trim()}`);
-            });
-        }
-    });
-
-    // 3. Xử lý nút bấm "Vào" phòng chơi
-    const btnJoin = document.querySelector("button:contains('Vào')") || Array.from(document.querySelectorAll("button")).find(b => b.textContent.trim() === "Vào");
-    if (btnJoin) {
-        btnJoin.addEventListener("click", () => {
-            const roomCode = document.querySelector("input[type='text']")?.value;
-            if(!roomCode) {
-                alert("Vui lòng nhập Mã Phòng Chơi!");
-            } else {
-                alert(`Đang kết nối vào phòng: ${roomCode}`);
-            }
-        });
-    }
-
-    // 4. Xử lý nút "Quản Lý Câu Hỏi Mở Phòng Ngay"
-    const btnCreate = Array.from(document.querySelectorAll("button")).find(b => b.textContent.includes("Mở Phòng") || b.textContent.includes("Quản Lý"));
-    if (btnCreate) {
-        btnCreate.addEventListener("click", () => {
-            alert("Đang khởi tạo phòng chơi mới với tư cách Chủ Phòng!");
-        });
-    }
-});
-
-// Polyfill hỗ trợ tìm kiếm text nếu trình duyệt cũ
-if (!jQuery && !NodeList.prototype.contains) {
-    // Hỗ trợ bộ lọc tìm nút bấm theo chữ
-}
-</script>
+    <script src="script.js"></script>
 </body>
 </html>
