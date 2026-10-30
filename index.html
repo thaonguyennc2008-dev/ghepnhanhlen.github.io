@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò Chơi Ghép Từ Đa Người Chơi</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode library for generating real QR code in lobby -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- sql.js for in-browser SQLite database support -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex flex-col select-none">
+
+    <!-- Global Notification Modal -->
+    <div id="custom-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border-4 border-[#E89B5B] text-center transform transition-all scale-95 opacity-0" id="modal-content">
+            <div id="modal-icon" class="text-4xl mb-3 text-[#FFA500]"><i class="fa-solid fa-bell"></i></div>
+            <h3 id="modal-title" class="text-xl font-bold mb-2 text-[#930031]">Thông Báo</h3>
+            <p id="modal-message" class="text-gray-700 mb-6 text-sm">Nội dung thông báo...</p>
+            <button onclick="closeModal()" class="w-full py-3 bg-[#E89B5B] hover:bg-[#D46743] text-white font-bold rounded-2xl shadow-md transition-all">Đồng Ý</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app-container" class="flex-1 flex flex-col">
+        
+        <!-- ================= PAGE 1: HOME & LOBBY ================= -->
+        <div id="page-home" class="page flex-1 flex flex-col items-center justify-center p-4 md:p-8">
+            <div class="max-w-4xl w-full bg-white/90 backdrop-blur-md rounded-3xl shadow-2xl p-6 md:p-10 border-4 border-[#BEDEFF]">
+                <div class="text-center mb-6">
+                    <span class="bg-[#BFE7EA] text-[#15370D] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">Học Tập Vui Nhộn & Trực Tuyến</span>
+                    <h1 class="text-3xl md:text-5xl font-black text-[#930031] mt-3 tracking-tight">Ghép Từ Vui Nhộn</h1>
+                    <p class="text-gray-600 mt-2 text-sm md:text-base">Phòng chơi trực tuyến hỗ trợ tối đa 50 người chơi. Tùy chỉnh nhân vật sinh động và thử thách ngay!</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    <!-- Avatar Customization Preview Column with Vivid Visual Swatches & Illustrations -->
+                    <div class="bg-gradient-to-b from-[#FFEAD3] to-[#FFF2B4]/40 rounded-3xl p-6 border-4 border-[#E5CD82] shadow-md flex flex-col items-center relative overflow-hidden">
+                        <div class="absolute -right-8 -top-8 w-24 h-24 bg-[#FFA500]/10 rounded-full blur-xl"></div>
+                        <h2 class="text-base font-black text-[#930031] mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles text-[#FFA500]"></i> Thiết Kế Nhân Vật Đáng Yêu
+                        </h2>
+                        
+                        <!-- Avatar Visual Canvas -->
+                        <div id="avatar-preview" class="relative w-36 h-36 rounded-full bg-gradient-to-tr from-[#BFE7EA] to-[#BEDEFF] flex items-center justify-center shadow-lg border-4 border-white mb-5 overflow-hidden transition-all duration-300 transform hover:scale-105">
+                            <!-- Base Body -->
+                            <div id="av-body" class="absolute w-28 h-28 bg-[#FFBEFB] flex items-center justify-center shadow-md transition-all duration-300 rounded-full">
+                                <!-- Hair Back -->
+                                <div id="av-hair-back" class="absolute -top-3 w-32 h-20 rounded-full bg-[#8C56D4] z-0"></div>
+                                <!-- Face Expressions -->
+                                <div class="relative z-10 flex flex-col items-center">
+                                    <div class="flex gap-4 mb-2">
+                                        <div id="av-eye-left" class="w-3.5 h-3.5 bg-[#15370D] rounded-full animate-pulse"></div>
+                                        <div id="av-eye-right" class="w-3.5 h-3.5 bg-[#15370D] rounded-full animate-pulse"></div>
+                                    </div>
+                                    <!-- Glasses - Centered and aligned correctly over eyes -->
+                                    <div id="av-glasses" class="absolute top-0 -left-4 flex items-center justify-center gap-1 hidden z-30">
+                                        <div class="w-7 h-5 border-2 border-black rounded-full bg-cyan-200/50 shadow-sm"></div>
+                                        <div class="w-2 h-1 bg-black self-center"></div>
+                                        <div class="w-7 h-5 border-2 border-black rounded-full bg-cyan-200/50 shadow-sm"></div>
+                                    </div>
+                                    <!-- Mouth -->
+                                    <div id="av-mouth" class="w-6 h-3 border-b-4 border-[#930031] rounded-full mt-1"></div>
+                                </div>
+                                <!-- Hair Front -->
+                                <div id="av-hair-front" class="absolute -top-2 w-28 h-10 bg-[#8C56D4] rounded-t-full z-20"></div>
+                            </div>
+                            <!-- Clothes Badge -->
+                            <div id="av-clothes" class="absolute bottom-1 w-16 h-8 bg-[#D46743] rounded-t-xl z-30 flex items-center justify-center text-[10px] text-white font-extrabold shadow">Áo</div>
+                        </div>
+
+                        <!-- Customizer Controls with Vivid Visual Swatches & Illustrations -->
+                        <div class="w-full space-y-3 text-xs bg-white/90 p-4 rounded-2xl shadow-inner border border-[#E89B5B]/30">
+                            <div>
+                                <label class="block font-extrabold text-xs text-[#15370D] mb-1 flex items-center gap-1">
+                                    <i class="fa-solid fa-signature text-[#D46743]"></i> Tên Nhân Vật:
+                                </label>
+                                <input type="text" id="player-name-input" value="Bé Ngoan" maxlength="15" oninput="updateAvatar()" class="w-full px-3 py-2 rounded-xl border-2 border-[#E89B5B] focus:outline-none focus:border-[#930031] bg-white font-bold text-[#15370D] shadow-sm">
+                            </div>
+
+                            <!-- Body Color Swatches with Illustrations -->
+                            <div>
+                                <label class="block font-bold text-xs text-gray-700 mb-1.5 flex items-center justify-between">
+                                    <span><i class="fa-solid fa-palette text-[#8C56D4]"></i> Màu Cơ Thể:</span>
+                                    <span class="text-[10px] text-gray-500 font-normal">Chọn màu sắc tươi sáng</span>
+                                </label>
+                                <div class="flex gap-2 justify-between" id="swatch-body">
+                                    <button type="button" onclick="setCustomParam('bodyColor', '#FFBEFB', this)" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 ring-2 ring-[#930031] flex items-center justify-center text-[10px]" style="background-color: #FFBEFB;" title="Hồng kẹo ngọt">💖</button>
+                                    <button type="button" onclick="setCustomParam('bodyColor', '#FFF2A7', this)" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 flex items-center justify-center text-[10px]" style="background-color: #FFF2A7;" title="Vàng nắng ấm">⭐</button>
+                                    <button type="button" onclick="setCustomParam('bodyColor', '#BEDEFF', this)" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 flex items-center justify-center text-[10px]" style="background-color: #BEDEFF;" title="Xanh mây trời">☁️</button>
+                                    <button type="button" onclick="setCustomParam('bodyColor', '#F2DACE', this)" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 flex items-center justify-center text-[10px]" style="background-color: #F2DACE;" title="Hồng pastel">🌸</button>
+                                    <button type="button" onclick="setCustomParam('bodyColor', '#E5CD82', this)" class="w-8 h-8 rounded-full border-2 border-white shadow-md transition-transform hover:scale-110 flex items-center justify-center text-[10px]" style="background-color: #E5CD82;" title="Vàng đồng">✨</button>
+                                </div>
+                            </div>
+
+                            <!-- Hair Style & Color Swatches -->
+                            <div class="grid grid-cols-2 gap-3 pt-1">
+                                <div>
+                                    <label class="block font-bold text-xs text-gray-700 mb-1">Kiểu Tóc:</label>
+                                    <div class="grid grid-cols-2 gap-1.5" id="swatch-hair-style">
+                                        <button type="button" onclick="setCustomParam('hairStyle', 'style1', this)" class="p-1.5 bg-[#FFF2B4] rounded-xl border border-[#E89B5B] text-[10px] font-bold text-center hover:bg-white ring-2 ring-[#930031] flex items-center justify-center gap-1">
+                                            <span>✂️</span> Ngắn Xù
+                                        </button>
+                                        <button type="button" onclick="setCustomParam('hairStyle', 'style2', this)" class="p-1.5 bg-white rounded-xl border border-gray-200 text-[10px] font-bold text-center hover:bg-[#FFF2B4] flex items-center justify-center gap-1">
+                                            <span>💇</span> Dài Mượt
+                                        </button>
+                                        <button type="button" onclick="setCustomParam('hairStyle', 'style3', this)" class="p-1.5 bg-white rounded-xl border border-gray-200 text-[10px] font-bold text-center hover:bg-[#FFF2B4] flex items-center justify-center gap-1">
+                                            <span>🌿</span> Chỏm
+                                        </button>
+                                        <button type="button" onclick="setCustomParam('hairStyle', 'style4', this)" class="p-1.5 bg-white rounded-xl border border-gray-200 text-[10px] font-bold text-center hover:bg-[#FFF2B4] flex items-center justify-center gap-1">
+                                            <span>✨</span> Trọc
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-xs text-gray-700 mb-1">Màu Tóc:</label>
+                                    <div class="flex gap-1.5 justify-between pt-1">
+                                        <button type="button" onclick="setCustomParam('hairColor', '#8C56D4', this)" class="w-6 h-6 rounded-full border border-white shadow ring-2 ring-[#930031]" style="background-color: #8C56D4;" title="Tím mộng mơ"></button>
+                                        <button type="button" onclick="setCustomParam('hairColor', '#930031', this)" class="w-6 h-6 rounded-full border border-white shadow" style="background-color: #930031;" title="Đỏ Ruby"></button>
+                                        <button type="button" onclick="setCustomParam('hairColor', '#D46743', this)" class="w-6 h-6 rounded-full border border-white shadow" style="background-color: #D46743;" title="Cam sáng"></button>
+                                        <button type="button" onclick="setCustomParam('hairColor', '#15370D', this)" class="w-6 h-6 rounded-full border border-white shadow" style="background-color: #15370D;" title="Xanh đậm"></button>
+                                        <button type="button" onclick="setCustomParam('hairColor', '#FFA500', this)" class="w-6 h-6 rounded-full border border-white shadow" style="background-color: #FFA500;" title="Vàng cam"></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Accessories & Clothes Swatches -->
+                            <div class="grid grid-cols-2 gap-3 pt-1">
+                                <div>
+                                    <label class="block font-bold text-xs text-gray-700 mb-1">Phụ Kiện Kính:</label>
+                                    <div class="grid grid-cols-3 gap-1" id="swatch-glasses">
+                                        <button type="button" onclick="setCustomParam('glasses', 'none', this)" class="p-1 bg-[#FFF2B4] rounded-lg border border-[#E89B5B] text-[10px] font-bold text-center ring-2 ring-[#930031]">Không</button>
+                                        <button type="button" onclick="setCustomParam('glasses', 'round', this)" class="p-1 bg-white rounded-lg border border-gray-200 text-[10px] font-bold text-center">👓 Tròn</button>
+                                        <button type="button" onclick="setCustomParam('glasses', 'star', this)" class="p-1 bg-white rounded-lg border border-gray-200 text-[10px] font-bold text-center">⭐ Sao</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block font-bold text-xs text-gray-700 mb-1">Trang Phục Áo:</label>
+                                    <div class="flex gap-1.5 justify-between pt-1">
+                                        <button type="button" onclick="setCustomParam('clothes', '#D46743', this)" class="w-6 h-6 rounded-md border border-white shadow ring-2 ring-[#930031]" style="background-color: #D46743;" title="Áo Cam"></button>
+                                        <button type="button" onclick="setCustomParam('clothes', '#728E6D', this)" class="w-6 h-6 rounded-md border border-white shadow" style="background-color: #728E6D;" title="Áo Xanh Lá"></button>
+                                        <button type="button" onclick="setCustomParam('clothes', '#DC95FF', this)" class="w-6 h-6 rounded-md border border-white shadow" style="background-color: #DC95FF;" title="Áo Tím Nhạt"></button>
+                                        <button type="button" onclick="setCustomParam('clothes', '#7C0E44', this)" class="w-6 h-6 rounded-md border border-white shadow" style="background-color: #7C0E44;" title="Áo Đỏ Vang"></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Room Joining & Host Options Column -->
+                    <div class="flex flex-col justify-between space-y-6">
+                        <div class="bg-gradient-to-br from-[#FFF2A7]/60 to-[#FFEAD3] rounded-3xl p-6 border-4 border-[#E5CD82] shadow-md">
+                            <h2 class="text-lg font-black text-[#15370D] mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-door-open text-[#D46743]"></i> Tham Gia Phòng Chờ
+                            </h2>
+                            <p class="text-xs text-gray-700 mb-4">Nhập mã phòng hoặc quét mã QR từ chủ phòng để gia nhập danh sách (Tối đa 50 người).</p>
+                            
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-xs font-extrabold text-gray-700 mb-1">Mã Phòng Chơi:</label>
+                                    <div class="flex gap-2">
+                                        <input type="text" id="room-code-input" placeholder="VD: WORD50" class="flex-1 px-4 py-2.5 rounded-xl border-2 border-[#E89B5B] uppercase font-bold text-center tracking-widest text-[#930031] bg-white shadow-inner">
+                                        <button onclick="joinRoom()" class="px-5 py-2.5 bg-[#728E6D] hover:bg-[#15370D] text-white font-bold rounded-xl shadow-md transition-all text-sm flex items-center gap-1">
+                                            <i class="fa-solid fa-arrow-right-to-bracket"></i> Vào
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Host Actions Box -->
+                        <div class="bg-gradient-to-br from-[#BFE7EA]/60 to-[#BEDEFF]/60 rounded-3xl p-6 border-4 border-[#BEDEFF] shadow-md text-center">
+                            <h2 class="text-lg font-black text-[#15370D] mb-2 flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-crown text-[#FFA500]"></i> Bạn là Chủ Phòng?
+                            </h2>
+                            <p class="text-xs text-gray-700 mb-4">Tạo câu hỏi, quản lý danh sách người chơi, chia sẻ mã QR/Link và bắt đầu trò chơi.</p>
+                            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                                <button onclick="goToPage('page-question')" class="flex-1 py-3 bg-[#8C56D4] hover:bg-[#7C0E44] text-white font-bold rounded-2xl shadow-md transition-all text-xs flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-file-pen"></i> Quản Lý Câu Hỏi
+                                </button>
+                                <button onclick="startHostRoom()" class="flex-1 py-3 bg-[#FFA500] hover:bg-[#D46743] text-white font-bold rounded-2xl shadow-md transition-all text-xs flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-play"></i> Mở Phòng Ngay
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 1.5: ONLINE LOBBY (WAITING ROOM) ================= -->
+        <div id="page-lobby" class="page flex-1 hidden flex flex-col items-center justify-center p-4 md:p-8">
+            <div class="max-w-4xl w-full bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 md:p-8 border-4 border-[#728E6D]">
+                <div class="flex flex-col md:flex-row justify-between items-center border-b-2 border-gray-100 pb-4 mb-6 gap-4">
+                    <div>
+                        <span class="bg-[#728E6D] text-white px-3 py-1 rounded-full text-xs font-bold">Phòng Trực Tuyến</span>
+                        <h2 class="text-2xl md:text-3xl font-black text-[#15370D] mt-1" id="lobby-room-title">Phòng: WORD50</h2>
+                    </div>
+                    <!-- Share Info -->
+                    <div class="flex items-center gap-3 bg-[#FFEAD3] px-4 py-2 rounded-2xl border border-[#E89B5B]">
+                        <div id="qrcode-container" class="w-12 h-12 bg-white p-1 rounded flex items-center justify-center overflow-hidden"></div>
+                        <div class="text-left text-xs">
+                            <p class="font-bold text-[#930031]">Mã Phòng: <span id="lbl-room-code" class="text-black font-extrabold">WORD50</span></p>
+                            <p class="text-gray-600 truncate max-w-[150px]" id="lbl-room-link">https://wordgame.edu/join/WORD50</p>
+                        </div>
+                        <button onclick="copyRoomLink()" class="bg-[#E89B5B] hover:bg-[#D46743] text-white px-3 py-1.5 rounded-xl font-bold text-xs shadow transition-all">Sao Chép</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Player List Card -->
+                    <div class="md:col-span-2 bg-gray-50 rounded-2xl p-4 border-2 border-gray-200 flex flex-col h-72">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-sm text-[#15370D] flex items-center gap-2">
+                                <i class="fa-solid fa-users text-[#8C56D4]"></i> Danh Sách Người Chơi 
+                            </h3>
+                            <span class="bg-[#BFE7EA] text-[#15370D] font-bold text-xs px-2.5 py-1 rounded-full" id="player-count-badge">1 / 50</span>
+                        </div>
+                        <div id="lobby-players-grid" class="flex-1 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-2 pr-1">
+                            <!-- Dynamic player items added here -->
+                        </div>
+                    </div>
+
+                    <!-- Room Controls / Host Control -->
+                    <div class="bg-[#FFEAD3]/60 rounded-2xl p-5 border-2 border-[#E5CD82] flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-sm text-[#930031] mb-2"><i class="fa-solid fa-sliders"></i> Trạng Thái Phòng</h3>
+                            <p class="text-xs text-gray-600 mb-4" id="lobby-status-desc">Đang tiếp nhận người chơi tham gia. Tối đa 50 người.</p>
+                            <div class="bg-white p-3 rounded-xl border border-[#E89B5B] text-center mb-4">
+                                <span class="text-xs text-gray-500 block">Số câu hỏi hiện có:</span>
+                                <span id="lobby-question-count" class="text-lg font-black text-[#D46743]">5 câu</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <button id="btn-start-game" onclick="startGameSession()" class="w-full py-3 bg-[#728E6D] hover:bg-[#15370D] text-white font-bold rounded-xl shadow-md transition-all text-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-play"></i> Bắt Đầu Trò Chơi
+                            </button>
+                            <button onclick="goToPage('page-home')" class="w-full py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl text-xs transition-all">
+                                Rời Phòng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 2: QUESTION CREATION ================= -->
+        <div id="page-question" class="page flex-1 hidden flex flex-col items-center justify-center p-4 md:p-8">
+            <div class="max-w-3xl w-full bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-6 md:p-8 border-4 border-[#8C56D4]">
+                <div class="flex justify-between items-center mb-6 border-b-2 border-gray-100 pb-4">
+                    <div>
+                        <span class="bg-[#8C56D4] text-white px-3 py-1 rounded-full text-xs font-bold">Chủ Phòng Quản Lý</span>
+                        <h2 class="text-2xl font-black text-[#930031] mt-1">Tạo & Nhập Câu Hỏi</h2>
+                    </div>
+                    <button onclick="goToPage('page-home')" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold rounded-xl text-xs transition-all flex items-center gap-1">
+                        <i class="fa-solid fa-arrow-left"></i> Về Trang Chủ
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Direct Input Card -->
+                    <div class="bg-[#BFE7EA]/30 p-5 rounded-2xl border-2 border-[#BEDEFF] flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-sm text-[#15370D] mb-3"><i class="fa-solid fa-pen-to-square text-[#D46743]"></i> Thêm Trực Tiếp</h3>
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-1">Từ hoặc Cụm từ chính xác:</label>
+                                    <input type="text" id="q-term" placeholder="VD: Trí tuệ nhân tạo" class="w-full p-2.5 rounded-xl border border-[#E89B5B] bg-white">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-1">Định nghĩa chính xác:</label>
+                                    <textarea id="q-definition" rows="2" placeholder="VD: Công nghệ mô phỏng quá trình suy nghĩ của con người." class="w-full p-2.5 rounded-xl border border-[#E89B5B] bg-white"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-gray-700 mb-1">Từ/Cụm nhiễu (cách nhau bởi dấu phẩy):</label>
+                                    <input type="text" id="q-distractors" placeholder="VD: Phần cứng, Mạch điện tử, Bộ nhớ ảo" class="w-full p-2.5 rounded-xl border border-[#E89B5B] bg-white">
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="addQuestionDirect()" class="mt-4 w-full py-2.5 bg-[#D46743] hover:bg-[#930031] text-white font-bold rounded-xl shadow text-xs transition-all">
+                            Thêm Vào Danh Sách Câu Hỏi
+                        </button>
+                    </div>
+
+                    <!-- File Upload Card -->
+                    <div class="bg-[#FFEAD3]/60 p-5 rounded-2xl border-2 border-[#E5CD82] flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-sm text-[#930031] mb-3"><i class="fa-solid fa-file-arrow-up text-[#FFA500]"></i> Chèn File Câu Hỏi</h3>
+                            <p class="text-xs text-gray-600 mb-4">Hỗ trợ tải lên file văn bản, JSON hoặc CSV chứa danh sách từ và định nghĩa.</p>
+                            
+                            <div class="border-2 border-dashed border-[#E89B5B] rounded-2xl p-6 text-center bg-white/50 cursor-pointer hover:bg-white transition-all relative">
+                                <input type="file" id="question-file" accept=".json,.csv,.txt" onchange="handleFileUpload(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-[#8C56D4] mb-2"></i>
+                                <p class="text-xs font-bold text-gray-700">Nhấn vào đây hoặc kéo thả file vào đây</p>
+                                <p class="text-[10px] text-gray-500 mt-1">(.json, .csv, .txt)</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-2 bg-white rounded-xl border border-gray-200 text-center">
+                            <span class="text-xs text-gray-500">Trạng thái file: </span>
+                            <span id="file-upload-status" class="text-xs font-bold text-[#728E6D]">Chưa chọn file nào</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions List Preview -->
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-sm text-[#15370D]">Danh Sách Câu Hỏi Hiện Tại (<span id="question-list-count">5</span>)</h3>
+                        <button onclick="clearAllQuestions()" class="text-xs text-red-600 hover:underline font-semibold">Xóa Tất Cả</button>
+                    </div>
+                    <div id="questions-container" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        <!-- Rendered question items -->
+                    </div>
+                </div>
+
+                <div class="mt-6 text-center">
+                    <button onclick="goToPage('page-lobby')" class="px-8 py-3 bg-[#728E6D] hover:bg-[#15370D] text-white font-bold rounded-xl shadow-md transition-all text-sm">
+                        Xác Nhận & Quay Lại Phòng Chờ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 3: GAMEPLAY (DRAG & DROP) ================= -->
+        <div id="page-game" class="page flex-1 hidden flex flex-col p-4 md:p-6 max-w-6xl mx-auto w-full">
+            <!-- Game Top Header Bar -->
+            <div class="bg-white/90 backdrop-blur-md rounded-2xl p-4 shadow-lg border-2 border-[#BEDEFF] flex flex-wrap justify-between items-center mb-4 gap-4">
+                <div class="flex items-center gap-3">
+                    <div id="game-player-avatar-mini" class="w-10 h-10 rounded-full bg-[#FFBEFB] border-2 border-white flex items-center justify-center font-bold text-xs shadow">Bé</div>
+                    <div>
+                        <h4 class="font-black text-sm text-[#930031]" id="game-player-name-display">Bé Ngoan</h4>
+                        <span class="text-xs text-gray-500 font-['Aptos']">Đang chơi trực tuyến</span>
+                    </div>
+                </div>
+
+                <!-- Score & Timer -->
+                <div class="flex items-center gap-4">
+                    <div class="bg-[#FFEAD3] px-4 py-1.5 rounded-xl border border-[#E89B5B] text-center">
+                        <span class="text-[10px] text-gray-600 block">Thời Gian</span>
+                        <span id="game-timer" class="font-black text-base text-[#D46743]">00:00</span>
+                    </div>
+                    <div class="bg-[#BFE7EA] px-4 py-1.5 rounded-xl border border-[#BEDEFF] text-center">
+                        <span class="text-[10px] text-gray-600 block">Điểm Số</span>
+                        <span id="game-score" class="font-black text-base text-[#15370D]">0</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="bg-[#8C56D4]/10 text-[#8C56D4] px-3 py-1 rounded-xl text-xs font-bold" id="game-progress-indicator">Câu 1/5</span>
+                    <button onclick="finishGameSession()" class="px-3 py-1.5 bg-[#930031] hover:bg-[#7C0E44] text-white rounded-xl text-xs font-bold shadow">Nộp Bài / Xem BXH</button>
+                </div>
+            </div>
+
+            <!-- Main Drag & Drop Area -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 items-start">
+                <!-- Definitions Column (Drop Zones) -->
+                <div class="lg:col-span-2 bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-xl border-4 border-[#E5CD82] flex flex-col">
+                    <div class="flex justify-between items-center mb-4 border-b pb-3">
+                        <h3 class="font-black text-base text-[#15370D] flex items-center gap-2">
+                            <i class="fa-solid fa-puzzle-piece text-[#FFA500]"></i> Các Định Nghĩa Cần Ghép
+                        </h3>
+                        <span class="text-xs text-gray-500">Kéo từ/cụm từ tương ứng vào ô bên cạnh</span>
+                    </div>
+                    
+                    <div id="definitions-list" class="space-y-4 flex-1">
+                        <!-- Dynamic definition cards -->
+                    </div>
+                </div>
+
+                <!-- Terms Source Column (Draggable Blocks) -->
+                <div class="bg-[#FFEAD3]/90 backdrop-blur-md rounded-3xl p-6 shadow-xl border-4 border-[#E89B5B] flex flex-col">
+                    <h3 class="font-black text-base text-[#930031] mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-cubes text-[#D46743]"></i> Kho Block Từ & Nhiễu
+                    </h3>
+                    <p class="text-xs text-gray-600 mb-4">Kéo các khối từ dưới đây thả vào các định nghĩa phù hợp ở khung bên trái. Chứa cả từ nhiễu!</p>
+
+                    <div id="draggable-terms-pool" class="flex flex-wrap gap-2.5 p-3 bg-white/60 rounded-2xl border-2 border-dashed border-[#E89B5B] min-h-[250px] items-start content-start font-['Aptos']">
+                        <!-- Dynamic draggable terms including distractors -->
+                    </div>
+
+                    <div class="mt-4 bg-[#FFF2A7] p-3 rounded-xl border border-[#E5CD82] text-center">
+                        <p class="text-[11px] text-[#15370D] font-bold"><i class="fa-solid fa-lightbulb text-orange-500"></i> Mẹo: Hãy đọc kỹ định nghĩa và chọn đúng từ khóa chính xác nhất!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PAGE 4: LEADERBOARD & PODIUM ================= -->
+        <div id="page-leaderboard" class="page flex-1 hidden flex flex-col p-4 md:p-8 max-w-5xl mx-auto w-full">
+            <!-- Background container with dynamic randomized background -->
+            <div id="leaderboard-bg-wrapper" class="flex-1 flex flex-col rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden transition-all duration-700 border-4 border-white bg-gradient-to-br from-[#BFE7EA] via-[#BEDEFF] to-[#FFEAD3]">
+                
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-8 relative z-10 gap-4">
+                    <div>
+                        <span class="bg-[#930031] text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase">Bảng Vàng Vinh Danh</span>
+                        <h2 class="text-3xl md:text-4xl font-black text-[#15370D] mt-2">Bục Xếp Hạng Người Chơi</h2>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="restartGame()" class="px-5 py-2.5 bg-[#728E6D] hover:bg-[#15370D] text-white font-bold rounded-xl shadow transition-all text-xs flex items-center gap-2">
+                            <i class="fa-solid fa-rotate-right"></i> Chơi Lại
+                        </button>
+                        <button onclick="goToPage('page-home')" class="px-5 py-2.5 bg-white hover:bg-gray-100 text-[#930031] font-bold rounded-xl shadow transition-all text-xs flex items-center gap-2">
+                            <i class="fa-solid fa-house"></i> Trang Chủ
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TOP 3 PODIUM STAGE -->
+                <div class="relative z-10 mb-12 flex justify-center items-end h-64 gap-3 sm:gap-6 pt-10">
+                    <!-- 2nd Place -->
+                    <div id="podium-2" class="flex flex-col items-center flex-1 max-w-[140px]">
+                        <div id="podium-avatar-2" class="w-14 h-14 rounded-full bg-white border-4 border-[#C0C0C0] shadow-lg mb-2 flex items-center justify-center font-bold text-xs relative overflow-hidden">
+                            <!-- Avatar rendered dynamically -->
+                        </div>
+                        <span id="podium-name-2" class="font-black text-xs text-[#15370D] truncate max-w-full bg-white/80 px-2 py-0.5 rounded-full shadow-sm mb-1">Hạng 2</span>
+                        <div class="w-full h-32 bg-gradient-to-t from-gray-300 to-gray-100 rounded-t-2xl shadow-lg border-t-4 border-[#C0C0C0] flex flex-col items-center justify-start pt-3">
+                            <span class="text-2xl font-black text-gray-700">2</span>
+                            <span id="podium-score-2" class="text-xs font-bold text-gray-600 mt-1">0đ</span>
+                        </div>
+                    </div>
+
+                    <!-- 1st Place (Winner) -->
+                    <div id="podium-1" class="flex flex-col items-center flex-1 max-w-[150px] -mt-6">
+                        <div class="absolute -top-6 text-3xl animate-bounce text-[#FFA500] drop-shadow">👑</div>
+                        <div id="podium-avatar-1" class="w-16 h-16 rounded-full bg-white border-4 border-[#FFD700] shadow-xl mb-2 flex items-center justify-center font-bold text-xs relative overflow-hidden">
+                            <!-- Avatar rendered dynamically -->
+                        </div>
+                        <span id="podium-name-1" class="font-black text-sm text-[#930031] truncate max-w-full bg-white/90 px-2.5 py-0.5 rounded-full shadow-sm mb-1">Hạng 1</span>
+                        <div class="w-full h-40 bg-gradient-to-t from-[#FFD700] to-[#FFF2A7] rounded-t-2xl shadow-xl border-t-4 border-yellow-400 flex flex-col items-center justify-start pt-3">
+                            <span class="text-3xl font-black text-[#930031]">1</span>
+                            <span id="podium-score-1" class="text-xs font-black text-[#15370D] mt-1">0đ</span>
+                        </div>
+                    </div>
+
+                    <!-- 3rd Place -->
+                    <div id="podium-3" class="flex flex-col items-center flex-1 max-w-[140px]">
+                        <div id="podium-avatar-3" class="w-14 h-14 rounded-full bg-white border-4 border-[#CD7F32] shadow-lg mb-2 flex items-center justify-center font-bold text-xs relative overflow-hidden">
+                            <!-- Avatar rendered dynamically -->
+                        </div>
+                        <span id="podium-name-3" class="font-black text-xs text-[#15370D] truncate max-w-full bg-white/80 px-2 py-0.5 rounded-full shadow-sm mb-1">Hạng 3</span>
+                        <div class="w-full h-24 bg-gradient-to-t from-[#CD7F32] to-[#F2DACE] rounded-t-2xl shadow-lg border-t-4 border-[#CD7F32] flex flex-col items-center justify-start pt-3">
+                            <span class="text-xl font-black text-[#7C0E44]">3</span>
+                            <span id="podium-score-3" class="text-xs font-bold text-[#15370D] mt-1">0đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REST OF LEADERBOARD LIST -->
+                <div class="relative z-10 bg-white/90 backdrop-blur-md rounded-2xl p-5 shadow-xl border-2 border-white flex-1 flex flex-col">
+                    <h3 class="font-black text-base text-[#15370D] mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol text-[#D46743]"></i> Bảng Xếp Hạng Các Thành Viên Khác (Top 4 đến 50)
+                    </h3>
+                    <div id="leaderboard-list" class="space-y-2 overflow-y-auto max-h-60 pr-1 flex-1">
+                        <!-- Rendered rows -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script File Linking -->
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+/* Safe font stack incorporating Aptos with reliable fallbacks */
+@import url('https://fonts.cdnfonts.com/css/aptos');
+
+body {
+font-family: 'Aptos', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+background-color: #FFEAD3;
+color: #15370D;
+overflow-x: hidden;
+}
+
+/* Custom scrollbar using color palette */
+::-webkit-scrollbar {
+width: 8px;
+}
+
+::-webkit-scrollbar-track {
+background: #FFEAD3;
+}
+
+::-webkit-scrollbar-thumb {
+background: #E89B5B;
+border-radius: 4px;
+}
+
+.avatar-circle {
+transition: all 0.3s ease;
+}
+
+@keyframes soft-pulse {
+0%, 100% { transform: scale(1); }
+50% { transform: scale(1.03); }
+}
+
+.animate-soft-pulse {
+animation: soft-pulse 2.5s infinite ease-in-out;
+}
+
+.draggable-item {
+cursor: grab;
+user-select: none;
+touch-action: none;
+}
+
+.draggable-item:active {
+cursor: grabbing;
+}
+
+.drop-zone {
+transition: all 0.2s ease;
+}
+
+.drop-zone.drag-over {
+background-color: #BFE7EA !important;
+border-color: #728E6D !important;
+transform: scale(1.02);
+}
+
+/* Ensure font family Aptos propagates cleanly across interactive blocks */
+.draggable-item, .drop-zone, input, select, button, textarea {
+font-family: 'Aptos', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
